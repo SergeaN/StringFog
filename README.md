@@ -14,19 +14,18 @@ Android-плагин, который автоматически шифрует �
 ![](https://github.com/MegatronKing/StringFog/blob/master/assets/flow.png)<br>
 
 - До шифрования:
-```java
-String a = "This is a string!";
+```kotlin
+val a = "This is a string!"
 ```
 
 - После шифрования:
-```java
-String a = StringFog.decrypt(new byte[]{-113, 71...}, new byte[]{-23, 53});
-
+```kotlin
+val a = StringFog.decrypt(byteArrayOf(-113, 71, /* ... */), byteArrayOf(-23, 53))
 ```
 
 - Во время выполнения:
-```java
-decrypt: new byte[]{-113, 71...} => "This is a string!"
+```kotlin
+decrypt: byteArrayOf(-113, 71, /* ... */) => "This is a string!"
 ```
 
 ### Обфускация
@@ -36,58 +35,26 @@ StringFog полностью совместим с обфускацией, и н
 Благодаря разработанному gradle-плагину интеграция очень проста и не влияет на конфигурацию сборки. Плагин загружен в MavenCentral, достаточно подключить зависимость.
 **jcenter устарел, начиная с версии 3.0+ публикация в нём прекращена**
 
-##### 1. Подключите зависимость плагина в корневом build.gradle.
-```groovy
+##### 1. Подключите зависимость плагина в корневом build.gradle.kts.
+```kotlin
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        ...
-        classpath 'com.github.megatronking.stringfog:gradle-plugin:5.2.0'
+        // ...
+        classpath("com.github.megatronking.stringfog:gradle-plugin:5.2.0")
         // Подключаемая библиотека алгоритма шифрования/дешифрования. По умолчанию
         // реализован алгоритм xor, но можно использовать и собственную библиотеку.
-        classpath 'com.github.megatronking.stringfog:xor:5.0.0'
+        classpath("com.github.megatronking.stringfog:xor:5.0.0")
     }
 }
 ```
 
-##### 2. Настройте плагин в build.gradle модуля app или lib.
-```groovy
-apply plugin: 'stringfog'
-
-// Импортируем класс RandomKeyGenerator. Если используется HardCodeKeyGenerator,
-// замените имя класса.
-import com.github.megatronking.stringfog.plugin.kg.RandomKeyGenerator
-import com.github.megatronking.stringfog.plugin.StringFogMode
-
-stringfog {
-    // Обязательно: путь к классу-реализации библиотеки шифрования/дешифрования,
-    // должен совпадать с подключённой выше библиотекой алгоритма.
-    implementation 'com.github.megatronking.stringfog.xor.StringFogImpl'
-    // Опционально: StringFog автоматически пытается получить packageName; если это
-    // не удаётся, его можно указать явно.
-    packageName 'com.github.megatronking.stringfog.app'
-    // Опционально: переключатель шифрования, по умолчанию включён.
-    enable true
-    // Опционально: указание пакетов с кодом, подлежащим шифрованию; можно задать
-    // несколько. Если не указано, по умолчанию шифруется всё.
-    fogPackages = ['com.xxx.xxx']
-    // Опционально (добавлено в версии 3.0): указание генератора ключей. По умолчанию
-    // используется случайный ключ длиной 8 (для каждой строки — свой случайный ключ).
-    // Можно также задать фиксированный ключ: HardCodeKeyGenerator("This is a key")
-    kg new RandomKeyGenerator()
-    // Опционально (добавлено в версии 4.0): управляет формой представления
-    // зашифрованной строки в байт-коде. По умолчанию base64, можно также использовать
-    // text или bytes.
-    mode StringFogMode.base64
-}
-```
-
-Пример настройки в kts
+##### 2. Настройте плагин в build.gradle.kts модуля app или lib.
 ```kotlin
 plugins {
-    //...lib или application
+    // ...lib или application
     id("stringfog")
 }
 apply(plugin = "stringfog")
@@ -96,25 +63,34 @@ configure<StringFogExtension> {
     // Обязательно: путь к классу-реализации библиотеки шифрования/дешифрования,
     // должен совпадать с подключённой выше библиотекой алгоритма.
     implementation = "com.github.megatronking.stringfog.xor.StringFogImpl"
+    // Опционально: StringFog автоматически пытается получить packageName; если это
+    // не удаётся, его можно указать явно.
+    // packageName = "com.github.megatronking.stringfog.app"
     // Опционально: переключатель шифрования, по умолчанию включён.
     enable = true
     // Опционально: указание пакетов с кодом, подлежащим шифрованию; можно задать
     // несколько. Если не указано, по умолчанию шифруется всё.
     // fogPackages = arrayOf("com.xxx.xxx")
+    // Опционально (добавлено в версии 3.0): указание генератора ключей. По умолчанию
+    // используется случайный ключ длиной 8 (для каждой строки — свой случайный ключ).
+    // Можно также задать фиксированный ключ:
+    // HardCodeKeyGenerator("This is a key")
     kg = com.github.megatronking.stringfog.plugin.kg.RandomKeyGenerator()
-    // base64 или bytes
-    mode = com.github.megatronking.stringfog.plugin.StringFogMode.bytes
+    // Опционально (добавлено в версии 4.0): управляет формой представления
+    // зашифрованной строки в байт-коде. По умолчанию base64, можно также использовать
+    // text или bytes.
+    mode = com.github.megatronking.stringfog.plugin.StringFogMode.base64
 }
 ```
 
-##### 3. Подключите зависимость библиотеки шифрования/дешифрования в build.gradle модуля app или lib.
+##### 3. Подключите зависимость библиотеки шифрования/дешифрования в build.gradle.kts модуля app или lib.
 
-```groovy
+```kotlin
 dependencies {
-      ...
+      // ...
       // Здесь должно быть то же, что и в выбранной выше библиотеке алгоритма,
       // она используется для дешифрования во время выполнения.
-      compile 'com.github.megatronking.stringfog:xor:5.0.0'
+      implementation("com.github.megatronking.stringfog:xor:5.0.0")
 }
 ```
 
@@ -126,7 +102,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    ...
+    // ...
 }
 ```
 
@@ -134,37 +110,33 @@ android {
 
 #### Исключение из шифрования через аннотацию
 Если у разработчика есть классы, которые не нужно шифровать автоматически, можно использовать аннотацию StringFogIgnore, чтобы их игнорировать:
-```java
+```kotlin
 @StringFogIgnore
-public class Test {
-    ...
+class Test {
+    // ...
 }
 ```
 #### Собственная реализация алгоритма шифрования/дешифрования
 Реализуйте интерфейс IStringFog, ориентируясь на реализацию алгоритма xor в каталоге stringfog-ext.
 Учтите, что некоторые алгоритмы ведут себя по-разному на разных платформах, из-за чего во время выполнения может возникнуть проблема некорректного дешифрования. Пример интеграции смотрите ниже!
-```java
-public final class StringFogImpl implements IStringFog {
+```kotlin
+class StringFogImpl : IStringFog {
 
-    @Override
-    public byte[] encrypt(String data, byte[] key) {
+    override fun encrypt(data: String, key: ByteArray): ByteArray {
         // Собственное шифрование
     }
 
-    @Override
-    public String decrypt(byte[] data, byte[] key) {
+    override fun decrypt(data: ByteArray, key: ByteArray): String {
         // Собственное дешифрование
     }
 
-    @Override
-    public boolean shouldFog(String data) {
+    override fun shouldFog(data: String): Boolean {
         // Управляет тем, шифровать ли указанную строку.
         // Рекомендуется отфильтровывать неважные или слишком длинные строки.
-        return true;
+        return true
     }
 
 }
-
 ```
 
 #### Собственный генератор ключей
